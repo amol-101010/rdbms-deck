@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Databases — From Scorebook to Superpower</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --surface2: #1a1a26;
+  --accent: #f5c542;
+  --accent2: #3dffa0;
+  --accent3: #ff6b6b;
+  --text: #f0ede8;
+  --muted: #888899;
+  --border: rgba(255,255,255,0.08);
+  --green: #3dffa0;
+  --red: #ff6b6b;
+  --blue: #5eaaff;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ---- DECK CONTAINER ---- */
+#deck {
+  width: 100vw; height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  padding: 48px 64px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: translateY(24px);
+}
+.slide.active {
+  opacity: 1; pointer-events: all; transform: translateY(0);
+}
+.slide.exit {
+  opacity: 0; transform: translateY(-24px);
+}
+
+/* ---- SCRIPT PANEL ---- */
+
+
+
+
+
+/* ---- NAV ---- */
+#nav {
+  position: fixed; bottom: 24px; right: 64px;
+  display: flex; align-items: center; gap: 12px;
+  z-index: 200;
+}
+.nav-btn {
+  width: 42px; height: 42px; border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: all 0.2s;
+}
+.nav-btn:hover { background: var(--surface2); border-color: var(--accent); color: var(--accent); }
+#counter {
+  font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted);
+  min-width: 48px; text-align: center;
+}
+
+
+
+/* ---- PROGRESS BAR ---- */
+#progress {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: var(--accent);
+  transition: width 0.4s ease;
+  z-index: 300;
+}
+
+/* ---- SLIDE NUMBER ---- */
+#slide-num {
+  position: fixed; top: 20px; right: 64px;
+  font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted);
+  z-index: 200;
+}
+
+/* ===== SLIDE STYLES ===== */
+
+/* BG noise overlay */
+.slide::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0; opacity: 0.4;
+}
+.slide > * { position: relative; z-index: 1; }
+
+/* Grid accent lines */
+.slide.grid-bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+/* ---- SLIDE 1: Title ---- */
+#s1 {
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, #1a1530 0%, var(--bg) 70%);
+  text-align: center;
+}
+#s1 .eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 24px;
+  padding: 6px 16px; border: 1px solid rgba(245,197,66,0.3);
+  border-radius: 20px; display: inline-block;
+}
+#s1 h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(42px, 6vw, 80px);
+  font-weight: 800; line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+#s1 h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+#s1 .subtitle {
+  font-size: 17px; color: var(--muted); margin-top: 20px; font-weight: 300;
+}
+.cricket-deco {
+  font-size: 80px; line-height: 1;
+  margin-bottom: 8px;
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* ---- SLIDE 2: The Scorebook Problem ---- */
+#s2 { background: var(--bg); }
+#s2 .two-col {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
+  width: 100%; max-width: 900px; align-items: center;
+}
+.scorebook {
+  background: #fffef2;
+  border-radius: 8px; padding: 20px;
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  color: #2a2a1a; line-height: 2;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  transform: rotate(-2deg);
+}
+.scorebook .sb-title {
+  font-weight: 500; font-size: 14px; border-bottom: 1px solid #ccc;
+  padding-bottom: 8px; margin-bottom: 8px; text-align: center;
+  letter-spacing: 0.1em;
+}
+.scorebook .strike { text-decoration: line-through; color: #999; }
+.sb-problem {
+  display: flex; flex-direction: column; gap: 12px;
+}
+.problem-pill {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 16px; font-size: 14px;
+}
+.problem-pill .p-icon { font-size: 20px; margin-right: 8px; }
+
+/* ---- SLIDE 3: Big Question ---- */
+#s3 {
+  background: var(--bg);
+  text-align: center;
+}
+.big-q {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(28px, 4vw, 52px);
+  font-weight: 700; line-height: 1.2; max-width: 700px;
+}
+.big-q .hl { color: var(--accent); }
+.answer-reveal {
+  margin-top: 32px; font-size: 18px; color: var(--muted);
+  font-weight: 300;
+}
+.answer-reveal strong { color: var(--accent2); font-weight: 500; }
+
+/* ---- SLIDE 4: What is a DB ---- */
+#s4 { background: var(--bg); }
+#s4 .center-content { max-width: 860px; width: 100%; }
+#s4 h2 {
+  font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 700;
+  margin-bottom: 32px;
+}
+.db-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 14px;
+  font-family: 'DM Mono', monospace;
+}
+.db-table th {
+  background: var(--accent); color: #0a0a0f;
+  padding: 10px 16px; text-align: left; font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.db-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.db-table tr:nth-child(even) td { background: var(--surface); }
+.db-table tr:last-child td { border-bottom: none; }
+.db-table .hl-row td { color: var(--accent); font-weight: 500; }
+.table-caption {
+  font-size: 12px; color: var(--muted); margin-top: 8px;
+  font-family: 'DM Mono', monospace; text-align: right;
+}
+
+/* ---- SLIDE 5: DB = Linked Tables ---- */
+#s5 { background: var(--bg); }
+.tables-diagram {
+  display: flex; gap: 32px; align-items: flex-start;
+  flex-wrap: wrap; justify-content: center;
+}
+.mini-table {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden;
+  min-width: 200px;
+}
+.mini-table .mt-head {
+  background: var(--surface2); padding: 8px 14px;
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+  letter-spacing: 0.04em; color: var(--accent);
+}
+.mini-table .mt-row {
+  padding: 6px 14px; font-size: 12px;
+  font-family: 'DM Mono', monospace;
+  border-top: 1px solid var(--border); color: var(--muted);
+}
+.mini-table .mt-row.key { color: var(--text); }
+.link-arrow {
+  font-size: 28px; color: var(--accent); align-self: center; opacity: 0.7;
+}
+.s5-label {
+  text-align: center; font-size: 13px; color: var(--muted);
+  margin-top: 6px; font-family: 'DM Mono', monospace;
+}
+
+/* ---- SLIDE 6: DBMS ---- */
+#s6 { background: var(--bg); }
+.dbms-layers {
+  display: flex; flex-direction: column; gap: 8px;
+  max-width: 600px; width: 100%;
+}
+.layer {
+  border-radius: 10px; padding: 14px 20px;
+  font-size: 15px; font-weight: 400;
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid var(--border);
+}
+.layer .l-icon { font-size: 22px; width: 32px; text-align: center; }
+.layer .l-title { font-weight: 500; font-size: 15px; }
+.layer .l-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.layer.app { background: rgba(94,170,255,0.12); border-color: rgba(94,170,255,0.3); }
+.layer.dbms-l { background: rgba(245,197,66,0.12); border-color: rgba(245,197,66,0.4); }
+.layer.data { background: rgba(61,255,160,0.08); border-color: rgba(61,255,160,0.25); }
+.arrow-down { text-align: center; font-size: 18px; color: var(--muted); }
+
+/* ---- SLIDE 7: ACID ---- */
+#s7 { background: var(--bg); text-align: center; }
+.acid-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+  max-width: 700px; width: 100%; margin-top: 8px;
+}
+.acid-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px;
+  text-align: left;
+}
+.acid-letter {
+  font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800;
+  color: var(--accent); line-height: 1;
+}
+.acid-word { font-size: 14px; font-weight: 500; margin: 4px 0; }
+.acid-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.upi-badge {
+  margin-top: 24px;
+  background: rgba(61,255,160,0.08); border: 1px solid rgba(61,255,160,0.3);
+  border-radius: 10px; padding: 12px 20px; font-size: 14px;
+  display: inline-block; max-width: 600px;
+}
+.upi-badge .u-label {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--accent2); margin-bottom: 4px;
+}
+
+/* ---- SLIDE 8: Index = Binary Search ---- */
+#s8 { background: var(--bg); }
+.index-compare {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
+  max-width: 860px; width: 100%;
+}
+.compare-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px;
+}
+.cc-head {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 16px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.cc-head.bad { color: var(--red); }
+.cc-head.good { color: var(--green); }
+.scan-rows {
+  display: flex; flex-direction: column; gap: 4px;
+  font-family: 'DM Mono', monospace; font-size: 12px;
+}
+.scan-row {
+  padding: 5px 10px; border-radius: 4px;
+  background: var(--surface2);
+  display: flex; justify-content: space-between;
+  transition: all 0.3s;
+}
+.scan-row.checking { border-color: var(--accent); color: var(--accent); background: rgba(245,197,66,0.1); }
+.scan-row.found { border-color: var(--green); color: var(--green); background: rgba(61,255,160,0.1); }
+.index-visual {
+  display: flex; flex-direction: column; gap: 4px;
+  font-family: 'DM Mono', monospace; font-size: 12px;
+}
+.idx-entry {
+  display: flex; gap: 8px; padding: 5px 10px;
+  border-radius: 4px; background: var(--surface2);
+  align-items: center;
+}
+.idx-key { color: var(--accent); min-width: 80px; }
+.idx-ptr { color: var(--muted); font-size: 10px; }
+.idx-entry.target { background: rgba(61,255,160,0.1); }
+.idx-entry.target .idx-key { color: var(--green); }
+
+/* ---- SLIDE 9: SQL Intro ---- */
+#s9 {
+  background: var(--bg); text-align: center;
+}
+.sql-intro-box {
+  max-width: 700px;
+}
+.sql-tagline {
+  font-family: 'Syne', sans-serif; font-size: clamp(24px, 3.5vw, 42px);
+  font-weight: 700; line-height: 1.2; margin-bottom: 24px;
+}
+.sql-tagline .hl { color: var(--accent); }
+.ipl-schema {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 20px;
+  text-align: left; font-family: 'DM Mono', monospace;
+  font-size: 13px; line-height: 1.8;
+}
+.schema-keyword { color: var(--blue); }
+.schema-type { color: var(--accent); }
+.schema-comment { color: var(--muted); }
+.schema-pk { color: var(--accent2); }
+
+/* ---- SLIDE 10–14: SQL Commands ---- */
+.sql-slide { background: var(--bg); }
+.sql-slide .slide-inner {
+  max-width: 860px; width: 100%;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start;
+}
+.sql-slide .left h2 {
+  font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 700;
+  margin-bottom: 8px;
+}
+.sql-slide .left .cmd-badge {
+  font-family: 'DM Mono', monospace; font-size: 13px;
+  background: rgba(245,197,66,0.15); border: 1px solid rgba(245,197,66,0.4);
+  color: var(--accent); padding: 4px 12px; border-radius: 20px;
+  display: inline-block; margin-bottom: 16px;
+}
+.sql-slide .left .description {
+  font-size: 15px; color: var(--muted); line-height: 1.7; font-weight: 300;
+}
+.sql-slide .left .analogy-note {
+  margin-top: 16px; font-size: 13px;
+  background: var(--surface2); border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0; padding: 10px 14px;
+  color: var(--muted); line-height: 1.6;
+}
+.sql-slide .right { display: flex; flex-direction: column; gap: 12px; }
+.code-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+}
+.code-block .cb-label {
+  background: var(--surface2); padding: 6px 14px;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--muted); border-bottom: 1px solid var(--border);
+}
+.code-block pre {
+  padding: 14px 16px; font-family: 'DM Mono', monospace;
+  font-size: 13px; line-height: 1.8; overflow-x: auto;
+}
+.kw { color: var(--blue); font-weight: 500; }
+.str { color: var(--green); }
+.num { color: var(--accent); }
+.cmt { color: var(--muted); font-style: italic; }
+.result-table-small {
+  width: 100%; border-collapse: collapse;
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  margin-top: 4px;
+}
+.result-table-small th {
+  background: var(--surface2); padding: 7px 10px;
+  text-align: left; color: var(--accent);
+  font-weight: 500; border-bottom: 1px solid var(--border);
+}
+.result-table-small td {
+  padding: 6px 10px; color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+.result-table-small tr:last-child td { border-bottom: none; }
+
+/* ---- SLIDE BIG REVEAL ---- */
+#s15 { background: var(--bg); text-align: center; }
+.reveal-content { max-width: 800px; }
+.reveal-content h2 {
+  font-family: 'Syne', sans-serif; font-size: clamp(28px, 4vw, 48px);
+  font-weight: 800; line-height: 1.1; margin-bottom: 32px;
+}
+.stack-viz {
+  display: flex; flex-direction: column; gap: 2px;
+  margin: 0 auto; max-width: 480px;
+}
+.stack-layer {
+  padding: 14px 24px; border-radius: 8px;
+  font-size: 15px; font-weight: 400;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.sl-front { background: rgba(94,170,255,0.15); border: 1px solid rgba(94,170,255,0.3); }
+.sl-back  { background: rgba(245,197,66,0.12); border: 1px solid rgba(245,197,66,0.3); }
+.sl-db    { background: rgba(61,255,160,0.1); border: 1px solid rgba(61,255,160,0.3); }
+.stack-layer .sl-label { color: var(--muted); font-size: 13px; }
+.stack-connector { text-align: center; font-size: 18px; color: var(--muted); padding: 2px; }
+
+/* ---- SLIDE: EE Connection ---- */
+#s16 { background: var(--bg); }
+.ee-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  max-width: 800px; width: 100%;
+}
+.ee-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px;
+}
+.ee-card .ec-head {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--muted); margin-bottom: 12px;
+}
+.ee-card .ec-title {
+  font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700;
+  color: var(--accent); margin-bottom: 8px;
+}
+.ee-card .ec-body { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+/* ---- FINAL SLIDE ---- */
+#s17 {
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, #1a1530 0%, var(--bg) 70%);
+  text-align: center;
+}
+.final-content { max-width: 700px; }
+#s17 h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 800; line-height: 1.05; letter-spacing: -0.03em;
+  margin-bottom: 16px;
+}
+#s17 .f-sub { font-size: 18px; color: var(--muted); margin-bottom: 32px; font-weight: 300; }
+.next-steps {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  margin-top: 24px;
+}
+.ns-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px; text-align: left;
+}
+.ns-num {
+  font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800;
+  color: var(--accent); line-height: 1;
+}
+.ns-text { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+
+/* ---- KEYFRAMES ---- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.slide.active .anim-1 { animation: fadeUp 0.5s ease 0.1s both; }
+.slide.active .anim-2 { animation: fadeUp 0.5s ease 0.25s both; }
+.slide.active .anim-3 { animation: fadeUp 0.5s ease 0.4s both; }
+.slide.active .anim-4 { animation: fadeUp 0.5s ease 0.55s both; }
+.slide.active .anim-5 { animation: fadeUp 0.5s ease 0.7s both; }
+
+/* Scan animation */
+@keyframes scanHighlight {
+  0%,100% { background: var(--surface2); color: var(--muted); }
+  50% { background: rgba(245,197,66,0.15); color: var(--accent); }
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<div id="slide-num">1 / 17</div>
+
+<div id="deck">
+
+<!-- ===================== SLIDE 1: TITLE ===================== -->
+<div class="slide" id="s1">
+  <div class="cricket-deco anim-1">🏏</div>
+  <div class="eyebrow anim-2">Guest Session · 2nd Year EE</div>
+  <h1 class="anim-3">From Scorebook<br>to <em>Superpower</em></h1>
+  <p class="subtitle anim-4">Databases &amp; SQL — explained without jargon</p>
+</div>
+
+<!-- ===================== SLIDE 2: THE PROBLEM ===================== -->
+<div class="slide" id="s2">
+  <div class="two-col">
+    <div class="anim-1">
+      <div class="scorebook">
+        <div class="sb-title">MATCH SCOREBOOK</div>
+        <div>Kohli.............. 75 runs</div>
+        <div>Rohit.............. 52 runs</div>
+        <div>Bumrah..... 3 wickets</div>
+        <div class="strike">Dhoni............. 40 runs</div>
+        <div>Dhoni............. 40 runs</div>
+        <div style="margin-top:12px;font-size:10px;color:#999">↑ correction tape used</div>
+        <div style="font-size:10px;color:#999">total pages: 847</div>
+      </div>
+    </div>
+    <div class="sb-problem anim-2">
+      <p style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:8px;">The Problem with Paper</p>
+      <div class="problem-pill">
+        <span class="p-icon">🔍</span>
+        <span><strong>Search takes forever</strong><br><span style="font-size:12px;color:var(--muted)">Flip 847 pages to find one stat</span></span>
+      </div>
+      <div class="problem-pill">
+        <span class="p-icon">✏️</span>
+        <span><strong>Edits cause errors</strong><br><span style="font-size:12px;color:var(--muted)">Strike-throughs, confused columns</span></span>
+      </div>
+      <div class="problem-pill">
+        <span class="p-icon">👥</span>
+        <span><strong>Only one person at a time</strong><br><span style="font-size:12px;color:var(--muted)">Two scorers = two different books</span></span>
+      </div>
+      <div class="problem-pill">
+        <span class="p-icon">🌧️</span>
+        <span><strong>Fragile</strong><br><span style="font-size:12px;color:var(--muted)">Rain, fire, lost notebook = gone forever</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SLIDE 3: BIG QUESTION ===================== -->
+<div class="slide" id="s3" style="text-align:center;">
+  <div class="big-q anim-1">How many runs did <span class="hl">Virat Kohli</span> score in all T20Is — and how fast can we find out?</div>
+  <div class="answer-reveal anim-2">
+    <p>A paper scorebook: <strong style="color:var(--red)">hours</strong></p>
+    <p style="margin-top:8px;">A <strong>database</strong>: <strong style="color:var(--green)">milliseconds</strong></p>
+  </div>
+  <p class="anim-3" style="margin-top:32px;font-size:14px;color:var(--muted);max-width:500px;">This is what we're learning today — <em style="color:var(--text)">how apps store and find information instantly</em>, even with millions of records.</p>
+</div>
+
+<!-- ===================== SLIDE 4: WHAT IS A DB ===================== -->
+<div class="slide" id="s4">
+  <div class="center-content">
+    <h2 class="anim-1">A Database is just a<br><span style="color:var(--accent)">very organised table</span></h2>
+    <div class="anim-2" style="overflow-x:auto;">
+      <table class="db-table">
+        <tr><th>player_id</th><th>name</th><th>team</th><th>matches</th><th>runs</th><th>wickets</th></tr>
+        <tr><td>1</td><td>V. Kohli</td><td>RCB</td><td>245</td><td>7263</td><td>4</td></tr>
+        <tr><td>2</td><td>J. Bumrah</td><td>MI</td><td>140</td><td>600</td><td>145</td></tr>
+        <tr class="hl-row"><td>3</td><td>R. Jadeja</td><td>CSK</td><td>210</td><td>2502</td><td>132</td></tr>
+        <tr><td>4</td><td>KL Rahul</td><td>LSG</td><td>130</td><td>4163</td><td>0</td></tr>
+        <tr><td>5</td><td>HH Pandya</td><td>MI</td><td>115</td><td>2204</td><td>87</td></tr>
+      </table>
+      <p class="table-caption">Table: players · 5 rows shown of ~500</p>
+    </div>
+    <div class="anim-3" style="margin-top:20px;display:flex;gap:24px;">
+      <div style="font-size:13px;color:var(--muted)">Each <span style="color:var(--accent)">row</span> = one player (one record)</div>
+      <div style="font-size:13px;color:var(--muted)">Each <span style="color:var(--accent)">column</span> = one attribute (one field)</div>
+      <div style="font-size:13px;color:var(--muted)">All together = one <span style="color:var(--accent)">table</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SLIDE 5: MULTIPLE TABLES ===================== -->
+<div class="slide" id="s5">
+  <p class="anim-1" style="font-family:'Syne',sans-serif;font-size:28px;font-weight:700;margin-bottom:28px;">A <span style="color:var(--accent)">database</span> = many tables, linked together</p>
+  <div class="tables-diagram anim-2">
+    <div>
+      <div class="mini-table">
+        <div class="mt-head">players</div>
+        <div class="mt-row key">player_id 🔑</div>
+        <div class="mt-row">name</div>
+        <div class="mt-row">team</div>
+        <div class="mt-row">runs</div>
+      </div>
+      <div class="s5-label">who the players are</div>
+    </div>
+    <div class="link-arrow">⇄</div>
+    <div>
+      <div class="mini-table">
+        <div class="mt-head">matches</div>
+        <div class="mt-row key">match_id 🔑</div>
+        <div class="mt-row">venue</div>
+        <div class="mt-row">date</div>
+        <div class="mt-row" style="color:var(--accent)">player_id 🔗</div>
+      </div>
+      <div class="s5-label">what happened in each match</div>
+    </div>
+    <div class="link-arrow">⇄</div>
+    <div>
+      <div class="mini-table">
+        <div class="mt-head">teams</div>
+        <div class="mt-row key">team_id 🔑</div>
+        <div class="mt-row">team_name</div>
+        <div class="mt-row">city</div>
+        <div class="mt-row">championships</div>
+      </div>
+      <div class="s5-label">info about each team</div>
+    </div>
+  </div>
+  <p class="anim-3" style="margin-top:24px;font-size:14px;color:var(--muted);text-align:center;">The 🔗 symbol means "this column refers to another table". This is called a <span style="color:var(--accent)">Foreign Key</span>.</p>
+</div>
+
+<!-- ===================== SLIDE 6: DBMS ===================== -->
+<div class="slide" id="s6" style="align-items:center;">
+  <p class="anim-1" style="font-family:'Syne',sans-serif;font-size:28px;font-weight:700;margin-bottom:8px;text-align:center;">Why not just use files?</p>
+  <p class="anim-1" style="font-size:14px;color:var(--muted);margin-bottom:28px;text-align:center;">Meet the <span style="color:var(--accent)">DBMS</span> — the Database Management System</p>
+  <div class="dbms-layers anim-2">
+    <div class="layer app">
+      <span class="l-icon">📱</span>
+      <div><div class="l-title">Your App (Hotstar, Swiggy, UPI)</div><div class="l-sub">Makes requests: "give me Kohli's runs"</div></div>
+    </div>
+    <div class="arrow-down">↓ ↑</div>
+    <div class="layer dbms-l">
+      <span class="l-icon">⚙️</span>
+      <div><div class="l-title">DBMS (MySQL, PostgreSQL, SQLite)</div><div class="l-sub">Handles access, security, concurrency, indexing</div></div>
+    </div>
+    <div class="arrow-down">↓ ↑</div>
+    <div class="layer data">
+      <span class="l-icon">💾</span>
+      <div><div class="l-title">Actual Data (disk storage)</div><div class="l-sub">Millions of records, safe and structured</div></div>
+    </div>
+  </div>
+  <p class="anim-3" style="margin-top:20px;font-size:13px;color:var(--muted);text-align:center;max-width:500px;">⚡ EE analogy: DBMS is your DB panel — it protects, controls, and distributes. You don't wire appliances directly to the mains.</p>
+</div>
+
+<!-- ===================== SLIDE 7: ACID ===================== -->
+<div class="slide" id="s7">
+  <p class="anim-1" style="font-family:'Syne',sans-serif;font-size:28px;font-weight:700;margin-bottom:20px;">The 4 Guarantees of a Good DBMS</p>
+  <div class="acid-grid anim-2">
+    <div class="acid-card">
+      <div class="acid-letter">A</div>
+      <div class="acid-word">Atomicity</div>
+      <div class="acid-desc">All or nothing. Either the full transaction completes, or nothing changes.</div>
+    </div>
+    <div class="acid-card">
+      <div class="acid-letter">C</div>
+      <div class="acid-word">Consistency</div>
+      <div class="acid-desc">Data always stays valid. Rules are never broken.</div>
+    </div>
+    <div class="acid-card">
+      <div class="acid-letter">I</div>
+      <div class="acid-word">Isolation</div>
+      <div class="acid-desc">Two transactions don't interfere with each other.</div>
+    </div>
+    <div class="acid-card">
+      <div class="acid-letter">D</div>
+      <div class="acid-word">Durability</div>
+      <div class="acid-desc">Once saved, it's saved forever — even if the server crashes.</div>
+    </div>
+  </div>
+  <div class="upi-badge anim-3">
+    <div class="u-label">Real example — UPI payment</div>
+    You send ₹500. Your balance drops. Network cuts before friend's balance updates. <strong style="color:var(--green)">Atomicity</strong> rolls back both — no money disappears.
+  </div>
+</div>
+
+<!-- ===================== SLIDE 8: INDEXING ===================== -->
+<div class="slide" id="s8">
+  <p class="anim-1" style="font-family:'Syne',sans-serif;font-size:26px;font-weight:700;margin-bottom:8px;text-align:center;">Indexing — your DSA knowledge in action</p>
+  <p class="anim-1" style="font-size:14px;color:var(--muted);margin-bottom:24px;text-align:center;">A database index is a B-tree. You already understand why this matters.</p>
+  <div class="index-compare anim-2">
+    <div class="compare-card">
+      <div class="cc-head bad">❌ No Index (Linear Scan)</div>
+      <div class="scan-rows">
+        <div class="scan-row">row 1: Kohli ← check</div>
+        <div class="scan-row">row 2: Bumrah ← check</div>
+        <div class="scan-row">row 3: Jadeja ← check</div>
+        <div class="scan-row checking">row 4: KL Rahul ← check</div>
+        <div class="scan-row">row 5: Pandya ← check</div>
+        <div class="scan-row">... 500 million more rows</div>
+      </div>
+      <p style="margin-top:12px;font-size:12px;color:var(--red);font-family:'DM Mono',monospace;">O(n) — scans EVERY row</p>
+    </div>
+    <div class="compare-card">
+      <div class="cc-head good">✅ With Index (Binary Search / B-tree)</div>
+      <div class="index-visual">
+        <div class="idx-entry"><span class="idx-key">Bumrah</span><span class="idx-ptr">→ page 2, row 3</span></div>
+        <div class="idx-entry target"><span class="idx-key">KL Rahul ✓</span><span class="idx-ptr">→ page 4, row 1 ←</span></div>
+        <div class="idx-entry"><span class="idx-key">Kohli</span><span class="idx-ptr">→ page 1, row 1</span></div>
+        <div class="idx-entry"><span class="idx-key">Pandya</span><span class="idx-ptr">→ page 5, row 2</span></div>
+      </div>
+      <p style="margin-top:12px;font-size:12px;color:var(--green);font-family:'DM Mono',monospace;">O(log n) — jumps directly</p>
+    </div>
+  </div>
+  <p class="anim-3" style="margin-top:20px;font-size:13px;color:var(--muted);text-align:center;">Binary search on 500 million Aadhaar records: ~29 comparisons. Linear scan: 250 million on average.</p>
+</div>
+
+<!-- ===================== SLIDE 9: SQL INTRO ===================== -->
+<div class="slide" id="s9">
+  <div class="sql-intro-box">
+    <div class="sql-tagline anim-1"><span class="hl">SQL</span> — talking to your data<br>in plain English</div>
+    <div class="ipl-schema anim-2">
+      <span class="schema-comment">-- Our table for today</span><br>
+      <span class="schema-keyword">CREATE TABLE</span> players (<br>
+      &nbsp;&nbsp;player_id &nbsp;<span class="schema-type">INTEGER</span> &nbsp;<span class="schema-pk">PRIMARY KEY</span>,<br>
+      &nbsp;&nbsp;name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="schema-type">TEXT</span>,<br>
+      &nbsp;&nbsp;team &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="schema-type">TEXT</span>,<br>
+      &nbsp;&nbsp;matches &nbsp;&nbsp;&nbsp;<span class="schema-type">INTEGER</span>,<br>
+      &nbsp;&nbsp;runs &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="schema-type">INTEGER</span>,<br>
+      &nbsp;&nbsp;wickets &nbsp;&nbsp;&nbsp;<span class="schema-type">INTEGER</span><br>
+      );
+    </div>
+    <p class="anim-3" style="margin-top:16px;font-size:13px;color:var(--muted);">We'll use this table for all the queries ahead. SQL reads like English — you'll be writing queries in the next 5 minutes.</p>
+  </div>
+</div>
+
+<!-- ===================== SLIDE 10: SELECT ===================== -->
+<div class="slide sql-slide" id="s10">
+  <div class="slide-inner">
+    <div class="left">
+      <div class="cmd-badge anim-1">Command 1 of 5</div>
+      <h2 class="anim-1">SELECT</h2>
+      <p class="description anim-2">"Show me these columns."<br><br>Like pointing at specific columns in a spreadsheet and saying — give me just those.</p>
+      <div class="analogy-note anim-3">🏏 "Read me the Name and Runs columns from the scorebook. Skip everything else."</div>
+    </div>
+    <div class="right anim-2">
+      <div class="code-block">
+        <div class="cb-label">query</div>
+        <pre><span class="kw">SELECT</span> name, runs
+<span class="kw">FROM</span> players;</pre>
+      </div>
+      <div class="code-block">
+        <div class="cb-label">result</div>
+        <table class="result-table-small">
+          <tr><th>name</th><th>runs</th></tr>
+          <tr><td>V. Kohli</td><td>7263</td></tr>
+          <tr><td>J. Bumrah</td><td>600</td></tr>
+          <tr><td>R. Jadeja</td><td>2502</td></tr>
+          <tr><td>KL Rahul</td><td>4163</td></tr>
+          <tr><td>HH Pandya</td><td>2204</td></tr>
+        </table>
+      </div>
+      <div class="code-block">
+        <div class="cb-label">want everything?</div>
+        <pre><span class="kw">SELECT</span> * <span class="kw">FROM</span> players;
+<span class="cmt">-- * means all columns</span></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SLIDE 11: WHERE ===================== -->
+<div class="slide sql-slide" id="s11">
+  <div class="slide-inner">
+    <div class="left">
+      <div class="cmd-badge anim-1">Command 2 of 5</div>
+      <h2 class="anim-1">WHERE</h2>
+      <p class="description anim-2">"Only show rows that match this condition."<br><br>This is your filter. Like searching only the RCB pages of the scorebook.</p>
+      <div class="analogy-note anim-3">🏏 "From all players, give me only the RCB players." — WHERE is the bouncer at the gate.</div>
+    </div>
+    <div class="right anim-2">
+      <div class="code-block">
+        <div class="cb-label">query — one condition</div>
+        <pre><span class="kw">SELECT</span> name, runs
+<span class="kw">FROM</span> players
+<span class="kw">WHERE</span> team = <span class="str">'RCB'</span>;</pre>
+      </div>
+      <div class="code-block">
+        <div class="cb-label">query — two conditions</div>
+        <pre><span class="kw">SELECT</span> name, runs
+<span class="kw">FROM</span> players
+<span class="kw">WHERE</span> team = <span class="str">'MI'</span>
+  <span class="kw">AND</span> runs &gt; <span class="num">1000</span>;</pre>
+      </div>
+      <div class="code-block">
+        <div class="cb-label">result</div>
+        <table class="result-table-small">
+          <tr><th>name</th><th>runs</th></tr>
+          <tr><td>HH Pandya</td><td>2204</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SLIDE 12: ORDER BY + LIMIT ===================== -->
+<div class="slide sql-slide" id="s12">
+  <div class="slide-inner">
+    <div class="left">
+      <div class="cmd-badge anim-1">Commands 3 &amp; 4</div>
+      <h2 class="anim-1">ORDER BY<br>+ LIMIT</h2>
+      <p class="description anim-2"><strong>ORDER BY</strong> = sort the results.<br><br><strong>LIMIT</strong> = take only the top N.</p>
+      <div class="analogy-note anim-3">🏏 "Sort the scorebook by runs, highest first. Now give me the top 3 names." This is how IPL's Orange Cap leaderboard works.</div>
+    </div>
+    <div class="right anim-2">
+      <div class="code-block">
+        <div class="cb-label">top 3 run scorers</div>
+        <pre><span class="kw">SELECT</span> name, runs
+<span class="kw">FROM</span> players
+<span class="kw">ORDER BY</span> runs <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> <span class="num">3</span>;</pre>
+      </div>
+      <div class="code-block">
+        <div class="cb-label">result (Orange Cap Top 3)</div>
+        <table class="result-table-small">
+          <tr><th>#</th><th>name</th><th>runs</th></tr>
+          <tr><td style="color:var(--accent)">1</td><td>V. Kohli</td><td>7263</td></tr>
+          <tr><td style="color:var(--muted)">2</td><td>KL Rahul</td><td>4163</td></tr>
+          <tr><td style="color:var(--muted)">3</td><td>R. Jadeja</td><td>2502</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SLIDE 13: AGGREGATE ===================== -->
+<div class="slide sql-slide" id="s13">
+  <div class="slide-inner">
+    <div class="left">
+      <div class="cmd-badge anim-1">Command 5 of 5</div>
+      <h2 class="anim-1">COUNT<br>SUM · AVG</h2>
+      <p class="description anim-2">Aggregate functions — they crunch numbers across many rows into one answer.</p>
+      <div class="analogy-note anim-3">🏏 "Across all players, what's the average runs scored?" — You're asking a question about the whole table, not one player.</div>
+    </div>
+    <div class="right anim-2">
+      <div class="code-block">
+        <div class="cb-label">how many players?</div>
+        <pre><span class="kw">SELECT COUNT</span>(*) <span class="kw">FROM</span> players;
+<span class="cmt">-- result: 500</span></pre>
+      </div>
+      <div class="code-block">
+        <div class="cb-label">average runs?</div>
+        <pre><span class="kw">SELECT AVG</span>(runs) <span class="kw">FROM</span> players;
+<span class="cmt">-- result: 1842.6</span></pre>
+      </div>
+      <div class="code-block">
+        <div class="cb-label">total wickets taken by MI?</div>
+        <pre><span class="kw">SELECT SUM</span>(wickets)
+<span class="kw">FROM</span> players
+<span class="kw">WHERE</span> team = <span class="str">'MI'</span>;
+<span class="cmt">-- result: 232</span></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SLIDE 14: CHALLENGE ===================== -->
+<div class="slide" id="s14" style="text-align:center;background:var(--bg);">
+  <p class="anim-1" style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;">⚡ Your Turn</p>
+  <p class="anim-1" style="font-family:'Syne',sans-serif;font-size:clamp(22px,3.5vw,40px);font-weight:700;max-width:700px;margin-bottom:32px;line-height:1.2;">Write a query to find all <span style="color:var(--accent)">MI players</span> who scored more than <span style="color:var(--accent)">1000 runs</span>, sorted by runs (highest first)</div>
+  <div class="anim-2" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 32px;max-width:600px;text-align:left;font-family:'DM Mono',monospace;font-size:15px;line-height:2.2;color:var(--surface2);">
+    <span style="color:var(--blue)">SELECT</span> _______, _______<br>
+    <span style="color:var(--blue)">FROM</span> _________<br>
+    <span style="color:var(--blue)">WHERE</span> team = _____ <span style="color:var(--blue)">AND</span> runs &gt; _____<br>
+    <span style="color:var(--blue)">ORDER BY</span> _______ <span style="color:var(--blue)">_____</span>;
+  </div>
+  <p class="anim-3" style="margin-top:20px;font-size:13px;color:var(--muted);">2 minutes. Use what you just learned. You've already seen every piece of this.</p>
+</div>
+
+<!-- ===================== SLIDE 15: BIG PICTURE ===================== -->
+<div class="slide" id="s15">
+  <div class="reveal-content">
+    <h2 class="anim-1">Every app you use<br>runs on <span style="color:var(--accent)">this stack</span></h2>
+    <div class="stack-viz anim-2">
+      <div class="stack-layer sl-front"><span>📱 Frontend (what you see)</span><span class="sl-label">Hotstar, Zomato, PhonePe</span></div>
+      <div class="stack-connector">↕</div>
+      <div class="stack-layer sl-back"><span>⚙️ Backend (the logic)</span><span class="sl-label">handles requests, rules</span></div>
+      <div class="stack-connector">↕</div>
+      <div class="stack-layer sl-db"><span>🗄️ Database (the memory)</span><span class="sl-label">stores everything permanently</span></div>
+    </div>
+    <p class="anim-3" style="margin-top:24px;font-size:14px;color:var(--muted);max-width:580px;margin-left:auto;margin-right:auto;">Knowing the database layer makes you dangerous as an engineer. Every internship, every startup, every product company — this skill is always needed.</p>
+  </div>
+</div>
+
+<!-- ===================== SLIDE 16: EE CONNECTION ===================== -->
+<div class="slide" id="s16">
+  <p class="anim-1" style="font-family:'Syne',sans-serif;font-size:26px;font-weight:700;margin-bottom:24px;text-align:center;">This is <span style="color:var(--accent)">not just for CS students</span></p>
+  <div class="ee-grid anim-2">
+    <div class="ee-card">
+      <div class="ec-head">Smart Grid / Power Systems</div>
+      <div class="ec-title">Every meter reading is a database row</div>
+      <div class="ec-body">SCADA systems log sensor data to a database every second. Power grid faults, load data, energy usage — all SQL tables.</div>
+    </div>
+    <div class="ee-card">
+      <div class="ec-head">IoT / Embedded Systems</div>
+      <div class="ec-title">SQLite runs on microcontrollers</div>
+      <div class="ec-body">Temperature sensors, industrial monitors, EV charging stations — all log to a local database. You'll use this in final year projects.</div>
+    </div>
+    <div class="ee-card">
+      <div class="ec-head">Your DSA Course</div>
+      <div class="ec-title">B-tree index = BST you studied</div>
+      <div class="ec-body">Database indexing is applied DSA. Hash indexes = hash maps. B-trees = balanced BSTs. You already understand the internals.</div>
+    </div>
+    <div class="ee-card">
+      <div class="ec-head">Career Reality</div>
+      <div class="ec-title">SQL is 20+ years old. Still #1.</div>
+      <div class="ec-body">Stack Overflow surveys: SQL is consistently the most-used language after JavaScript. Every tech job touches data.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SLIDE 17: FINAL ===================== -->
+<div class="slide" id="s17">
+  <div class="final-content">
+    <div class="cricket-deco anim-1">🏆</div>
+    <h2 class="anim-2">You just learned<br><span style="color:var(--accent)">how the internet works</span></h2>
+    <p class="f-sub anim-2">Every app. Every website. Every transaction. All built on what you saw today.</p>
+    <div class="next-steps anim-3">
+      <div class="ns-item">
+        <div class="ns-num">01</div>
+        <div class="ns-text">Try <strong>DB Browser for SQLite</strong> — free app, no installation headache. Build your own IPL database tonight.</div>
+      </div>
+      <div class="ns-item">
+        <div class="ns-num">02</div>
+        <div class="ns-text">Practice at <strong>sqlfiddle.com</strong> — runs in browser, no setup. Use our players table directly.</div>
+      </div>
+      <div class="ns-item">
+        <div class="ns-num">03</div>
+        <div class="ns-text">Next topic: <strong>JOINs</strong> — linking two tables together. "Show me player name AND team city from two different tables."</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end #deck -->
+  <div id="script-text"></div>
+</div>
+
+<!-- ============ NAV ============ -->
+<div id="nav">
+  <button class="nav-btn" onclick="prevSlide()">←</button>
+  <span id="counter">1 / 17</span>
+  <button class="nav-btn" onclick="nextSlide()">→</button>
+</div>
+
+<script>
+const TOTAL = 17;
+let current = 1;
+
+
+function showSlide(n) {
+  document.querySelectorAll('.slide').forEach(s => {
+    s.classList.remove('active', 'exit');
+  });
+  const el = document.getElementById('s' + n);
+  if (el) el.classList.add('active');
+  document.getElementById('progress').style.width = (n / TOTAL * 100) + '%';
+  document.getElementById('counter').textContent = n + ' / ' + TOTAL;
+  document.getElementById('slide-num').textContent = n + ' / ' + TOTAL;
+}
+
+function nextSlide() {
+  if (current < TOTAL) { current++; showSlide(current); }
+}
+
+function prevSlide() {
+  if (current > 1) { current--; showSlide(current); }
+}
+
+
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); prevSlide(); }
+});
+
+// Touch/swipe
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (dx < -50) nextSlide();
+  if (dx > 50) prevSlide();
+});
+
+showSlide(1);
+</script>
+</body>
+</html>
